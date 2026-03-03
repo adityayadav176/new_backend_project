@@ -1,4 +1,4 @@
-// import ConnectedToMongo from "./db/db.js"
+import ConnectedToMongo from "./db/db.js"
 import express from "express"
 import dotenv from "dotenv"
  dotenv.config({
@@ -10,4 +10,4 @@ app.listen(process.env.PORT, ()=>{
     console.log(`App is running is  port ${process.env.PORT}`);
 })
 
-// ConnectedToMongo();
+ConnectedToMongo();
