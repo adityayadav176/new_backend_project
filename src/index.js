@@ -1,25 +1,12 @@
 import ConnectedToMongo from "./db/db.js"
-import cookieParser from "cookie-parser"
-import cors from "cors"
-import express from "express"
 import dotenv from "dotenv"
+
  dotenv.config({
     path: './env'
  })
-const app = express()
 
-app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials:true
-}))
-
-app.use(express.json({limit: "16kb"}))
-app.use(express.urlencoded({extended:true, limit:"16kb"}))
-app.use(express.static("public"))
-app.use(cookieParser())
-
-app.listen(process.env.PORT, ()=>{
-    console.log(`App is running is  port ${process.env.PORT}`);
+ConnectedToMongo().then(app.listen(process.env.PORT|| 8000, ()=>{
+    console.log(`server is running on port : ${process.env.PORT}`)
+})).catch((err)=>{
+    console.log("MONGODB CONNECTION FAILED !! ERROR", err)
 })
-
-ConnectedToMongo();
