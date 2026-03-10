@@ -15,8 +15,7 @@ const registerUser = asyncHandler(async (req, res) => {
     //check for user creation
     //return res
 
-    const { fullname, email, username, password } = req.body
-    console.log("email: ", email)
+    const { fullname, email, username, password } = req.body || {}
     if ([fullname, email, username, password].some((field) => field?.trim() === "")) {
         throw new ApiError(400, "All Fields Are Required")
     }
@@ -43,13 +42,13 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Avatar file is required")
     }
     const user = await User.create({
-    fullname,
-    avatar: avatar.url,
-    coverImage: coverImage?.url || "",
-    email,
-    password,
-    username: username.toLowerCase()
-})
+        fullname,
+        avatar: avatar.url,
+        coverImage: coverImage?.url || "",
+        email,
+        password,
+        username: username.toLowerCase()
+    })
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
     )
