@@ -6,15 +6,15 @@ import { ApiResponse } from "../utils/ApiResponse.js"
 import { application } from "express"
 
 const generateAccessAndRefreshToken = async (userId) => {
-    try {
+        try {
         const user = await User.findById(userId)
         const accessToken = user.generateRefreshToken()
         const refreshToken = user.generateAccessToken()
 
         user.refreshToken = refreshToken
-       await user.save({ValidationBeforeSave: false})
+        await user.save({ ValidationBeforeSave: false })
 
-       return {accessToken, refreshToken}
+        return { accessToken, refreshToken }
     } catch (error) {
         throw new ApiError(500, "Something went wrong while generating refresh and access token")
     }
@@ -112,9 +112,29 @@ const loginUser = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Invalid user credentials")
     }
 
-//   const {accessToken, refreshToken} = await generateAccessAndRefreshToken(user._id)
+    const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id)
+
+    const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
+
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res.status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .json(new ApiResponse(
+            200,
+            {
+                user: loggedInUser, accessToken, refreshToken
+            },
+            "User Logged in Success"    
+        ))
 
 
 })
 
-export default registerUser
+// const logoutUser = asyncHandler(async (req,res))
+
+export{ registerUser, loginUser }
