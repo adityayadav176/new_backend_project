@@ -5,8 +5,9 @@ import {
     getVideoById,
     publishAVideo,
     togglePublishStatus,
-    updateVideo,
     updateVideoDetails,
+    uploadNewThumbnail,
+    uploadNewVideo,
 } from "../controllers/video.controller.js"
 import {verifyJWT} from "../middlewares/auth.middleware.js"
 import {upload} from "../middlewares/multer.middleware.js"
@@ -14,9 +15,6 @@ import {upload} from "../middlewares/multer.middleware.js"
 const router = Router();
 
 router.use(verifyJWT);
-
-router.route("/")
-.get(getAllVideos)
 
 router.post(
     "/AddNewVideo",
@@ -34,7 +32,7 @@ router.post(
 );
 
 
-router.route("/toggle/publish/:videoId").patch(togglePublishStatus);
+
 
 router.get("/test", (req, res) => {
     res.send("Video route working");
@@ -44,10 +42,14 @@ router.delete("/delete-video/:videoId", deleteVideo)
 
 router.patch("/update-video-details/:videoId", updateVideoDetails)
 
-router
-.route("/:videoId")
-.get(getVideoById)
-.delete(deleteVideo)
-.patch(upload.single("thumbnail"), updateVideo);
-console.log("video routes loaded")
+router.patch("/update-video-thumbnail/:videoId", uploadNewThumbnail)
+
+router.patch("/update-new-video", uploadNewVideo)
+
+router.get("/getVideoById", getVideoById)
+
+router.route("/toggle/publish/:videoId").patch(togglePublishStatus);
+
+router.route("/").get(getAllVideos)
+
 export default router;

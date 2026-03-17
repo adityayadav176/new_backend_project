@@ -1,6 +1,5 @@
 import mongoose, { isValidObjectId } from "mongoose"
 import { Video } from "../models/video.models.js"
-import { User } from "../models/user.models.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
@@ -110,26 +109,33 @@ const deleteVideo = asyncHandler(async (req, res) => {
         throw new ApiError(404, "Video not found")
     }
 
-    return res.status(200).json({
-        success: true,
-        data: video,
-        message: "Video deleted successfully"
-    })
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(200, {}, "Video deleted successfully")
+    )
 })
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
 
 })
-const updateVideo = asyncHandler(async (req, res) => {
+const uploadNewVideo = asyncHandler(async (req, res) => {
 
 })
+
+const uploadNewThumbnail = asyncHandler(async (req, res) => {
+
+})
+
+
 
 export {
     getAllVideos,
     publishAVideo,
     getVideoById,
-    updateVideo,
+    uploadNewVideo,
     deleteVideo,
     togglePublishStatus,
-    updateVideoDetails
+    updateVideoDetails,
+    uploadNewThumbnail
 }
