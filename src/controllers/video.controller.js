@@ -104,7 +104,17 @@ const updateVideoDetails = asyncHandler(async (req, res) => {
 });
 
 const deleteVideo = asyncHandler(async (req, res) => {
+    const video = await Video.findByIdAndDelete(req.params.videoId)
 
+    if (!video) {
+        throw new ApiError(404, "Video not found")
+    }
+
+    return res.status(200).json({
+        success: true,
+        data: video,
+        message: "Video deleted successfully"
+    })
 })
 
 const togglePublishStatus = asyncHandler(async (req, res) => {

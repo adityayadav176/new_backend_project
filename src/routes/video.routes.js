@@ -40,6 +40,8 @@ router.get("/test", (req, res) => {
     res.send("Video route working");
 });
 
+router.delete("/delete-video/:videoId", deleteVideo)
+
 router.patch("/update-video-details/:videoId", updateVideoDetails)
 
 router
