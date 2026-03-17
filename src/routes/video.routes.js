@@ -20,7 +20,6 @@ router.route("/")
 router.post(
     "/AddNewVideo",
     (req, res, next) => {
-        console.log("👉 BEFORE MULTER");
         next();
     },
     upload.fields([
@@ -28,9 +27,6 @@ router.post(
         { name: "thumbnail", maxCount: 1 },
     ]),
     (req, res, next) => {
-        console.log("👉 AFTER MULTER");
-        console.log("FILES:", req.files);
-        console.log("BODY:", req.body);
         next();
     },
     publishAVideo
@@ -46,7 +42,7 @@ router.get("/test", (req, res) => {
 
 router
 .route("/:videoId")
-// .get(getVideoById)
+.get(getVideoById)
 .delete(deleteVideo)
 .patch(upload.single("thumbnail"), updateVideo);
 console.log("video routes loaded")
