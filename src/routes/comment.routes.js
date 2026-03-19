@@ -4,14 +4,15 @@ import {
     addComment,
     deleteComment,
     getAllComment,
-    updateComment
+    // updateComment
 } from "../controllers/comment.controller.js";
 const router = Router()
 
 router.use(verifyJWT)
 
-router.route("/:videoId").post(addComment).post(getAllComment)
-router.route("/c/:commentId").delete(deleteComment).patch(updateComment)
+router.post("/addComment/:videoId", addComment)
+
+// router.patch("/update-comment/:commentId", updateComment)
 
 export default router
 
