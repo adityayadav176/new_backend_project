@@ -8,7 +8,6 @@ const getAllComment = asyncHandler(async (req, res) => {
 
 })
 
-
 const addComment = asyncHandler(async (req, res) => {
     const { content } = req.body;
     const { videoId } = req.params;
@@ -81,7 +80,7 @@ const deleteComment = asyncHandler(async (req, res) => {
     const comment = await Comment.findByIdAndDelete(commentId)
 
     if(!comment){
-        throw new ApiError(400, "error while deleting comment!")
+        throw new ApiError(400, "comment not found!")
     }
 
     res
