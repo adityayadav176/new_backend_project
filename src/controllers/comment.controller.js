@@ -5,7 +5,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 const getAllComment = asyncHandler(async (req, res) => {
-
+    
 })
 
 
@@ -38,38 +38,38 @@ const addComment = asyncHandler(async (req, res) => {
         );
 });
 
-// const updateComment = asyncHandler(async (req, res) => {
-//     const { content } = req.body
-//     const { commentId } = req.params
+const updateComment = asyncHandler(async (req, res) => {
+    const { content } = req.body
+    const { commentId } = req.params
 
-//     if (!content || content.trim() === "") {
-//         throw new ApiError(404, "content not be empty")
-//     }
+    if (!content || content.trim() === "") {
+        throw new ApiError(404, "content not be empty")
+    }
 
-//     if (!commentId || !mongoose.isValidObjectId(commentId)) {
-//         throw new ApiError(400, "Invalid CommentId")
-//     }
+    if (!commentId || !mongoose.isValidObjectId(commentId)) {
+        throw new ApiError(400, "Invalid CommentId")
+    }
 
-//     const newComment = await Comment.findByIdAndUpdate(
-//         commentId,
-//         {
-//             content
-//         },
-//         {
-//             new: true
-//         }
-//     )
+    const newComment = await Comment.findByIdAndUpdate(
+        commentId,
+        {
+            content
+        },
+        {
+            new: true
+        }
+    )
 
-//     if (!newComment) {
-//         throw new ApiError(400, "failed to update new comment")
-//     }
+    if (!newComment) {
+        throw new ApiError(400, "failed to update new comment")
+    }
 
-//     res
-//         .status(200)
-//         .json(
-//             new ApiResponse(200, newComment, "comment updated successfully")
-//         )
-// })
+    res
+        .status(200)
+        .json(
+            new ApiResponse(200, newComment, "comment updated successfully")
+        )
+})
 
 const deleteComment = asyncHandler(async (req, res) => {
 
@@ -78,6 +78,6 @@ const deleteComment = asyncHandler(async (req, res) => {
 export {
     getAllComment,
     addComment,
-    // updateComment,
+    updateComment,
     deleteComment
 }
