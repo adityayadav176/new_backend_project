@@ -1,7 +1,7 @@
 import mongoose, { Schema } from "mongoose"
 
 const playlistSchema = new Schema({
-    video: [{
+    videos: [{
         type: Schema.Types.ObjectId,
         ref: "Video"
     }],
@@ -11,7 +11,6 @@ const playlistSchema = new Schema({
     },
     description: {
         type: String,
-        required: true
     },
    owner: {
         type: Schema.Types.ObjectId,
