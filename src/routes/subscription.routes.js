@@ -13,6 +13,6 @@ router.route("/c/:channelId").post(toggleSubscription);
 
 router.post("/subscriptions", getSubscribedChannels)
 
-router.route("/u/:subscriberId").get(getUserChannelSubscribers);
+router.route("/subscriber").get(getUserChannelSubscribers);
 
 export default router
