@@ -7,7 +7,57 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 
 
 const getAllVideos = asyncHandler(async (req, res) => {
-})
+    let { page, limit, query, sortBy = "createdAt", sortType = "desc", userId } = req.query;
+
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 10;
+
+    const skip = (page - 1) * limit;
+
+    const filter = {
+        isPublished: true
+    };
+
+    // 🔍 Search
+    if (query && query.trim() !== "") {
+        filter.$or = [
+            { title: { $regex: query, $options: "i" } },
+            { description: { $regex: query, $options: "i" } }
+        ];
+    }
+
+    // ✅ FIXED VALIDATION
+    if (userId && !mongoose.isValidObjectId(userId)) {
+        throw new ApiError(400, "Invalid userId");
+    }
+
+    // 👤 Filter
+    if (userId) {
+        filter.owner = new mongoose.Types.ObjectId(userId);
+    }
+
+    const sortOrder = sortType === "asc" ? 1 : -1;
+
+    const videos = await Video.find(filter)
+        .sort({ [sortBy]: sortOrder })
+        .skip(skip)
+        .limit(limit)
+        .populate("owner", "username avatar");
+
+    const totalVideos = await Video.countDocuments(filter);
+
+    res.status(200).json(
+        new ApiResponse(200, {
+            videos,
+            pagination: {
+                totalVideos,
+                currentPage: page,
+                totalPages: Math.ceil(totalVideos / limit),
+                limit
+            }
+        }, "Videos fetched successfully")
+    );
+});
 
 const publishAVideo = asyncHandler(async (req, res) => {
 
@@ -72,23 +122,23 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
 
-    
+
     if (!mongoose.isValidObjectId(videoId)) {
         throw new ApiError(400, "Invalid video id");
     }
 
-   
+
     const video = await Video.findOne({
         _id: videoId,
         isPublished: true
     });
 
-    
+
     if (!video) {
         throw new ApiError(404, "Video not found");
     }
 
-   
+
     return res.status(200).json(
         new ApiResponse(200, video, "Video fetched successfully")
     );
