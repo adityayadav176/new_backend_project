@@ -122,28 +122,32 @@ const publishAVideo = asyncHandler(async (req, res) => {
 const getVideoById = asyncHandler(async (req, res) => {
     const { videoId } = req.params;
 
-
     if (!mongoose.isValidObjectId(videoId)) {
         throw new ApiError(400, "Invalid video id");
     }
 
-
-    const video = await Video.findOne({
-        _id: videoId,
-        isPublished: true
-    });
-
+    // increment views + get video
+    const video = await Video.findOneAndUpdate(
+        {
+            _id: videoId,
+            isPublished: true
+        },
+        {
+            $inc: { views: 1 }
+        },
+        {
+            returnDocument: "after"
+        }
+    );
 
     if (!video) {
         throw new ApiError(404, "Video not found");
     }
 
-
     return res.status(200).json(
         new ApiResponse(200, video, "Video fetched successfully")
     );
 });
-
 const updateVideoDetails = asyncHandler(async (req, res) => {
     const { title, description } = req.body;
 
