@@ -29,8 +29,10 @@ const getVideoComments = asyncHandler(async (req, res) => {
     }).sort({ createdAt: -1 }).skip(skip).limit(limitNumber).populate("owner", "username avatar")
 
     // check comment not empty
-    if (Comments.length === 0) {
-        throw new ApiError(404, "Comment not found!")
+    if (!Comments || Comments.length === 0) {
+        return res.status(200).json(
+            new ApiResponse(200, [], "No Comments Yet!")
+        )
     }
     //send response
     res
