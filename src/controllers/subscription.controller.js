@@ -7,58 +7,71 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 
 
 const toggleSubscription = asyncHandler(async (req, res) => {
-    const {channelId} = req.params
-    const userId =  req.user?._id
+    const { channelId } = req.params;
+    const userId = req.user?._id;
 
-    if(!channelId || !mongoose.isValidObjectId(channelId)){
-        throw new ApiError(400, "Invalid channelId")
+    // Auth check
+    if (!userId) {
+        throw new ApiError(401, "Unauthorized");
     }
 
-    if(channelId.toString() === userId.toString()){
-        throw new ApiError(400, "you can not subscribe to your own channel")
+    // Validate channelId
+    if (!channelId || !mongoose.isValidObjectId(channelId)) {
+        throw new ApiError(400, "Invalid channelId");
     }
 
-    if(!userId){
-        throw new ApiError(401, "unAuthorized!")
+    // Prevent self subscribe
+    if (channelId.toString() === userId.toString()) {
+        throw new ApiError(400, "You cannot subscribe to your own channel");
     }
 
+    // Check channel exists
+    const channelExists = await User.exists({ _id: channelId });
+    if (!channelExists) {
+        throw new ApiError(404, "Channel not found");
+    }
+
+    // Check existing subscription
     const existingSubscriber = await Subscription.findOne({
         subscriber: userId,
-        channel: channelId 
-    })
+        channel: channelId
+    });
 
     let message;
 
-    if(existingSubscriber){
-        await Subscription.findByIdAndDelete(existingSubscriber._id);
-        message = "unsubscribed successfully"
-    }else{
+    if (existingSubscriber) {
+        await Subscription.deleteOne({ _id: existingSubscriber._id });
+        message = "Unsubscribed successfully";
+    } else {
         await Subscription.create({
             subscriber: userId,
             channel: channelId
         });
-        message = "Subscribed successfully"
+        message = "Subscribed successfully";
     }
 
-    return res
-    .status(200)
-    .json(
+    return res.status(200).json(
         new ApiResponse(200, {}, message)
     );
 });
 
 // controller to return subscriber list of a channel
 const getUserChannelSubscribers = asyncHandler(async (req, res) => {
-    const userId = req.user?._id
+    const userId = req.user?._id;
+    let { page = 1, limit = 10 } = req.query;
 
     if (!userId) {
         throw new ApiError(401, "Unauthorized");
     }
 
-    const Subscribers = await Subscription.aggregate([
+    const pageNumber = Math.max(1, parseInt(page));
+    const limitNumber = Math.max(1, parseInt(limit));
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const subscribers = await Subscription.aggregate([
         {
             $match: {
-               channel:  new mongoose.Types.ObjectId(userId)
+                channel: new mongoose.Types.ObjectId(userId)
             }
         },
         {
@@ -66,36 +79,39 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
                 from: "users",
                 localField: "subscriber",
                 foreignField: "_id",
-                as: "SubscribersDetails"
+                as: "subscriberDetails"
             }
         },
-        {
-            $unwind: "$SubscribersDetails"
-        },
+        { $unwind: "$subscriberDetails" },
         {
             $project: {
-                _id: "$SubscribersDetails._id",
-                fullname: "$SubscribersDetails.fullname",
-                avatar: "$SubscribersDetails.avatar",
-                username: "$SubscribersDetails.username"
+                _id: "$subscriberDetails._id",
+                fullname: "$subscriberDetails.fullname",
+                username: "$subscriberDetails.username",
+                avatar: "$subscriberDetails.avatar"
             }
-        }
-    ])
+        },
+        { $skip: skip },
+        { $limit: limitNumber }
+    ]);
 
-    return res
-    .status(200)
-    .json(
-        new ApiResponse(200, Subscribers, "fetched all Subscribers successfully")
-    )
-})
+    return res.status(200).json(
+        new ApiResponse(200, subscribers, "Subscribers fetched successfully")
+    );
+});
 
 // controller to return channel list to which user has subscribed
 const getSubscribedChannels = asyncHandler(async (req, res) => {
     const userId = req.user?._id;
+    let { page = 1, limit = 10 } = req.query;
 
     if (!userId) {
         throw new ApiError(401, "Unauthorized");
     }
+
+    const pageNumber = Math.max(1, parseInt(page));
+    const limitNumber = Math.max(1, parseInt(limit));
+    const skip = (pageNumber - 1) * limitNumber;
 
     const channels = await Subscription.aggregate([
         {
@@ -111,9 +127,7 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
                 as: "channelDetails"
             }
         },
-        {
-            $unwind: "$channelDetails"
-        },
+        { $unwind: "$channelDetails" },
         {
             $project: {
                 _id: 0,
@@ -122,7 +136,9 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
                 fullname: "$channelDetails.fullname",
                 avatar: "$channelDetails.avatar"
             }
-        }
+        },
+        { $skip: skip },
+        { $limit: limitNumber }
     ]);
 
     return res.status(200).json(
