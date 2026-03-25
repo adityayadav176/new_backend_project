@@ -3,6 +3,7 @@ import { Playlist } from "../models/playlist.model.js"
 import { ApiError } from "../utils/ApiError.js"
 import { ApiResponse } from "../utils/ApiResponse.js"
 import { asyncHandler } from "../utils/asyncHandler.js"
+import { Video } from "../models/video.models.js"
 
 
 const createPlaylist = asyncHandler(async (req, res) => {
@@ -71,7 +72,7 @@ const getPlaylistById = asyncHandler(async (req, res) => {
     }
 
     const playlist = await Playlist.findById(playlistId)
-        .populate("videos", "title thumbnail duration")
+        .populate("videos", "title thumbnail duration videoFile")
         .populate("owner", "username avatar");
 
     if (!playlist) {
