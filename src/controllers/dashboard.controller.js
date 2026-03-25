@@ -13,53 +13,47 @@ const getChannelStats = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Unauthorized");
     }
 
-    const stats = await Video.aggregate([
-        // Match videos of logged-in user
-        {
-            $match: {
-                owner: new mongoose.Types.ObjectId(userId)
-            }
-        },
+    const userObjectId = new mongoose.Types.ObjectId(userId);
 
-        // Lookup likes
+    // Total videos & views
+    const videoStats = await Video.aggregate([
         {
-            $lookup: {
-                from: "likes",
-                localField: "_id",
-                foreignField: "video",
-                as: "likes"
-            }
+            $match: { owner: userObjectId }
         },
-
-        // Add likes count per video
-        {
-            $addFields: {
-                likesCount: { $size: "$likes" }
-            }
-        },
-
-        // Group all videos → single stats object
         {
             $group: {
                 _id: null,
                 totalVideos: { $sum: 1 },
-                totalViews: { $sum: "$views" },
-                totalLikes: { $sum: "$likesCount" }
+                totalViews: { $sum: "$views" }
             }
         }
     ]);
 
-    // Get subscribers count (separate query)
+    // Total likes (optimized)
+    const totalLikes = await Like.countDocuments({
+        video: { $ne: null },
+        video: {
+            $in: await Video.find({ owner: userId }).distinct("_id")
+        }
+    });
+
+    // Subscribers
     const totalSubscribers = await Subscription.countDocuments({
         channel: userId
     });
 
+    const totalFollowing = await Subscription.countDocuments({
+        subscriber: userId
+    })
+
+
     return res.status(200).json(
         new ApiResponse(200, {
-            totalVideos: stats[0]?.totalVideos || 0,
-            totalViews: stats[0]?.totalViews || 0,
-            totalLikes: stats[0]?.totalLikes || 0,
-            totalSubscribers
+            totalVideos: videoStats[0]?.totalVideos || 0,
+            totalViews: videoStats[0]?.totalViews || 0,
+            totalLikes,
+            totalSubscribers,
+            totalFollowing
         }, "Channel stats fetched successfully")
     );
 });
@@ -72,8 +66,8 @@ const getChannelVideos = asyncHandler(async (req, res) => {
         throw new ApiError(401, "Unauthorized");
     }
 
-    const pageNumber = parseInt(page);
-    const limitNumber = parseInt(limit);
+    const pageNumber = Math.max(1, parseInt(page));
+    const limitNumber = Math.max(1, parseInt(limit));
     const skip = (pageNumber - 1) * limitNumber;
 
     const videos = await Video.aggregate([
@@ -81,7 +75,6 @@ const getChannelVideos = asyncHandler(async (req, res) => {
         {
             $match: {
                 owner: new mongoose.Types.ObjectId(userId)
-                // No isPublished filter (user can see private videos)
             }
         },
 
